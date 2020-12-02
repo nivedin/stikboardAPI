@@ -304,7 +304,6 @@ exports.listRelated = (req,res) => {
 
 exports.listSearch = (req,res) => {
     const {search} = req.query
-    console.log(req.query);
     if(search){
         Blog.find({
             $or:[{title:{$regex:search,$options:'i'}},{body:{$regex:search,$options:'i'}}]
@@ -315,6 +314,7 @@ exports.listSearch = (req,res) => {
                 })
             }
             res.json(blogs)
+            
         }
         ).select('-body');
     }
