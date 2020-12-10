@@ -90,9 +90,14 @@ exports.update = (req, res) => {
 exports.photo = (req,res) => {
     const username = req.params.username
     User.findOne({username}).exec((err,user) => {
-        if(err || !user){
+        if(!user){
             return res.status(400).json({
                 error:'User not found'
+            })
+        }
+        if(err || !user.photo.data ){
+            return res.status(400).json({
+                error:'Photo not found'
             })
         }
         if(user.photo.data){
