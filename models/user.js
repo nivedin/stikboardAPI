@@ -1,6 +1,6 @@
 const mongoose = require('mongoose')
 const crypto = require('crypto')
-
+const {ObjectId} = mongoose.Schema
 
 const userSchema = new mongoose.Schema({
     username:{
@@ -41,6 +41,8 @@ const userSchema = new mongoose.Schema({
         type:String,
         default:0
     },
+    following:[{type:ObjectId,unique:true,ref:"User"}],
+    followers:[{type:ObjectId,unique:true,ref:"User"}],
     photo:{
         data:Buffer,
         contentType:String

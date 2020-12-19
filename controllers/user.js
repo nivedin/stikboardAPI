@@ -5,17 +5,24 @@ const _ = require('lodash')
 const formidable = require('formidable')
 const fs = require('fs')
 
+const mongoose = require('mongoose')
+const ObjectId = mongoose.Schema
+
 exports.read = (req,res) => {
     req.profile.hashed_password = undefined
     return res.json(req.profile)
 }
+
 
 exports.publicProfile = (req,res) => {
     let username = req.params.username
     let user
     let blogs
 
-    User.findOne({username}).exec((err,userFromDB) => {
+    User.findOne({username})
+    .populate('following','_id username name')
+    .populate('followers','_id username name')
+    .exec((err,userFromDB) => {
         if(err || !userFromDB){
             return res.status(400).json({
                 error:'User not found'
@@ -45,6 +52,41 @@ exports.publicProfile = (req,res) => {
     })
 
 };
+// exports.publicProfile = (req,res) => {
+//     let username = req.params.username
+//     let user
+//     let blogs
+
+//     User.findOne({username}).exec((err,userFromDB) => {
+//         if(err || !userFromDB){
+//             return res.status(400).json({
+//                 error:'User not found'
+//             })
+//         }
+//         user = userFromDB
+//         let userId = user._id
+//         Blog.find({postedBy:userId})
+//         .populate('categories','_id name slug')
+//         .populate('tags','_id name slug')
+//         .populate('postedBy','_id name')
+//         .limit(10)
+//         .select('_id title slug excerpt categories tags postedBy createdAt updatedAt')
+//         .exec((err,data) => {
+//             if(err) {
+//                     return res.status(400).json({
+//                     error:errorHandler(err)
+//                 })
+//             }
+//             user.photo = undefined
+//             user.hashed_password = undefined
+//             res.json({
+//                 user,
+//                 blogs:data
+//             })
+//         })
+//     })
+
+// };
 
 exports.update = (req, res) => {
     let form = new formidable.IncomingForm();
@@ -106,3 +148,89 @@ exports.photo = (req,res) => {
         }
     })
 }
+
+
+exports.allUser = (req,res) => {
+    User.find((err,users) =>{
+        if(err){
+            return res.status(400).json({
+                error:err
+            })
+        }
+        res.json({users})
+    })
+    .select("name email username profile photo createdAt updatedAt")
+    .populate('following','_id name username')
+    .populate('followers','_id name username')
+}
+
+//add_Follow_unfollow
+
+exports.addFollowing = (req,res,next) => {
+    //console.log(req.body.userId,req.body.followId);
+
+    const userId = req.body.userId
+    //console.log(userId,req.body.followId);
+
+    User.findByIdAndUpdate(userId,{$push:{following:req.body.followId}},(err,result) => {
+        if(err){
+            return res.status(400).json({
+                error:err
+            })
+        }
+        next()
+    })
+}
+
+exports.addFollower = (req,res) => {
+    const followerId = req.body.followId
+    User.findByIdAndUpdate(followerId,{$push:{followers:req.body.userId}},{new:true}
+    )
+    .populate('following','_id username name')
+    .populate('followers','_id username name')
+    .exec((err,results) => {
+        if(err){
+            return res.status(400).json({
+                error:err
+            })
+        }
+        results.hashed_password = undefined;
+        results.salt = undefined;
+        res.json(results);
+
+    })
+};
+
+//remove_Follow_unfollow
+
+exports.removeFollowing = (req,res,next) => {
+    const userId = req.body.userId
+    User.findByIdAndUpdate(userId,{$pull:{following:req.body.unfollowId}},(err,result) => {
+        if(err){
+            return res.status(400).json({
+                error:err
+            })
+        }
+        next()
+    })
+}
+
+exports.removeFollower = (req,res) => {
+    const unfollowerId = req.body.unfollowId
+    User.findByIdAndUpdate(unfollowerId,{$pull:{followers:req.body.userId}},{new:true}
+    )
+    .populate('following','_id username name')
+    .populate('followers','_id username name')
+    .exec((err,results) => {
+        if(err){
+            return res.status(400).json({
+                error:err
+            })
+        }
+        results.hashed_password = undefined;
+        results.salt = undefined;
+        res.json(results);
+
+    })
+};
+
