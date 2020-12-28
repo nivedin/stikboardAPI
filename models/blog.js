@@ -37,6 +37,14 @@ const blogSchema = new mongoose.Schema(
         },
         categories: [{ type: ObjectId, ref: 'Category', required: true }],
         tags: [{ type: ObjectId, ref: 'Tag', required: true }],
+        likes:[{type:ObjectId,unique:true,ref:"User"}],
+        comments:[
+            {
+                text:String,
+                createdOn:{type:Date,default:Date.now},
+                postedBy:{type:ObjectId,ref:"User"}
+            }
+        ],
         postedBy: {
             type: ObjectId,
             ref: 'User'

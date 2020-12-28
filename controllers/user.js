@@ -10,6 +10,8 @@ const ObjectId = mongoose.Schema
 
 exports.read = (req,res) => {
     req.profile.hashed_password = undefined
+    req.profile.photo = undefined
+    req.profile.salt = undefined
     return res.json(req.profile)
 }
 
@@ -34,8 +36,11 @@ exports.publicProfile = (req,res) => {
         .populate('categories','_id name slug')
         .populate('tags','_id name slug')
         .populate('postedBy','_id name')
+        .populate('likes','_id name username')
+    .populate('comments','text createdOn')
+    .populate('comments.postedBy','_id name username')
         .limit(10)
-        .select('_id title slug excerpt categories tags postedBy createdAt updatedAt')
+        .select('_id title slug excerpt categories tags postedBy createdAt updatedAt likes comments')
         .exec((err,data) => {
             if(err) {
                     return res.status(400).json({

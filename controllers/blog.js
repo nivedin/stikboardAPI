@@ -101,7 +101,10 @@ exports.list = (req,res) => {
     .populate('categories','_id name slug')
     .populate('tags','_id name slug')
     .populate('postedBy','_id name username profile')
-    .select('_id title slug excerpt categories  tags postedBy createdAt updatedAt')
+    .populate('likes','_id name username')
+    .populate('comments','text createdOn')
+    .populate('comments.postedBy','_id name username')
+    .select('_id title slug excerpt categories tags postedBy createdAt updatedAt likes comments')
     .exec((error,data) => {
         if(error){
             return res.json({
@@ -126,10 +129,13 @@ exports.listAllBlogsCatogoriesTags = (req,res) => {
     .populate('categories','_id name slug')
     .populate('tags','_id name slug')
     .populate('postedBy','_id name username profile')
+    .populate('likes','_id name username')
+    .populate('comments','text createdOn')
+    .populate('comments.postedBy','_id name username')
     .sort({createdAt:-1})
     .skip(skip)
     .limit(limit)
-    .select('_id title slug excerpt categories  tags postedBy createdAt updatedAt')
+    .select('_id title slug excerpt categories tags postedBy createdAt updatedAt likes comments')
     .exec((error,data) => {
         if(error){
             return res.json({
@@ -161,8 +167,8 @@ exports.listAllBlogsCatogoriesTags = (req,res) => {
        })
     })
 })
-
 },
+
 
 exports.read = (req,res) => {
     const slug = req.params.slug.toLowerCase()
@@ -171,7 +177,10 @@ exports.read = (req,res) => {
     .populate('categories','_id name slug')
     .populate('tags','_id name slug')
     .populate('postedBy','_id name username profile')
-    .select('_id title body slug mtitle mdesc categories  tags postedBy createdAt updatedAt')
+    .populate('likes','_id name username')
+    .populate('comments','text createdOn')
+    .populate('comments.postedBy','_id name username')
+    .select('_id title body slug mtitle mdesc categories tags postedBy createdAt updatedAt likes comments')
     .exec((err,data) => {
         if(err){
             return res.json({
@@ -290,7 +299,10 @@ exports.listRelated = (req,res) => {
     Blog.find({_id:{$ne:_id},categories:{$in:categories}})
     .limit(limit)
     .populate('postedBy','_id name username profile')
-    .select('title slug excerpt postedBy createdAt updatedAt')
+    .populate('likes','_id name username')
+    .populate('comments','text createdOn')
+    .populate('comments.postedBy','_id name username')
+    .select('title slug excerpt postedBy createdAt updatedAt likes comments')
     .exec((err,blogs) => {
         if(err){
             return res.status(400).json({
@@ -334,7 +346,10 @@ exports.listByUser = (req,res) => {
         .populate('categories','_id name slug')
         .populate('tags','_id name slug')
         .populate('postedBy','_id name username')
-        .select('_id title slug excerpt postedBy createdAt updatedAt')
+        .populate('likes','_id name username')
+        .populate('comments','text createdOn')
+        .populate('comments.postedBy','_id name username')
+        .select('_id title slug excerpt postedBy createdAt updatedAt likes comments')
         .exec((err,data) => {
             if(err){
                 return res.status(400).json({
@@ -345,4 +360,69 @@ exports.listByUser = (req,res) => {
         })
     })
 
+}
+
+exports.likeBlog = (req,res) => {
+    //console.log(req.body);
+    const slug = req.body.slug
+    Blog.findOneAndUpdate({slug},{$push:{likes:req.body.userId}},{new:true})
+    .exec((err,data) => {
+        if(err){
+            return res.status(400).json({
+                error:errorHandler(err)
+            })
+        }
+        // console.log("response",data);
+        res.json(data)
+    })
+}
+
+exports.unlikeBlog = (req,res) => {
+    const slug = req.body.slug
+    Blog.findOneAndUpdate({slug},{$pull:{likes:req.body.userId}},{new:true})
+    .exec((err,data) => {
+        if(err){
+            return res.status(400).json({
+                error:errorHandler(err)
+            })
+        }
+        res.json(data)
+    })
+}
+
+exports.commentBlog = (req,res) => {
+    console.log(req.body);
+    let comment = req.body.comment
+    comment.postedBy = req.body.userId
+    const slug = req.body.slug
+    Blog.findOneAndUpdate({slug},{$push:{comments:comment}},{new:true})
+    .populate('comments.postedBy','_id name username')
+    .populate('postedBy','_id name username')
+    .exec((err,data) => {
+        if(err){
+            return res.status(400).json({
+                error:errorHandler(err)
+            })
+        }
+        console.log("response",data);
+        res.json(data)
+    })
+}
+
+exports.uncommentBlog = (req,res) => {
+    //console.log(req.body);
+    let comment = req.body.comment
+    const slug = req.body.slug
+    Blog.findOneAndUpdate({slug},{$pull:{comments:{_id:comment._id}}},{new:true})
+    .populate('comments.postedBy','_id name username')
+    .populate('postedBy','_id name username')
+    .exec((err,data) => {
+        if(err){
+            return res.status(400).json({
+                error:errorHandler(err)
+            })
+        }
+        // console.log("response",data);
+        res.json(data)
+    })
 }
