@@ -214,7 +214,6 @@ exports.forgetPassword = (req,res) => {
                 error:'User with that email does not exist'
             })
         }
-
         const token = jwt.sign({_id:user._id},process.env.JWT_RESET_PASSWORD,{expiresIn:'10m'})
  
         const emailData = {

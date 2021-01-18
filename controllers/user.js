@@ -35,7 +35,7 @@ exports.publicProfile = (req,res) => {
         Blog.find({postedBy:userId})
         .populate('categories','_id name slug')
         .populate('tags','_id name slug')
-        .populate('postedBy','_id name')
+        .populate('postedBy','_id name username')
         .populate('likes','_id name username')
     .populate('comments','text createdOn')
     .populate('comments.postedBy','_id name username')
