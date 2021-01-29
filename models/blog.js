@@ -37,6 +37,13 @@ const blogSchema = new mongoose.Schema(
         },
         categories: [{ type: ObjectId, ref: 'Category', required: true }],
         tags: [{ type: ObjectId, ref: 'Tag', required: true }],
+        ratings:[
+            {
+                rate:Number,
+                createdOn:{type:Date,default:Date.now},
+                ratedBy:{type:ObjectId,ref:"User"}
+            }
+        ],
         likes:[{type:ObjectId,unique:true,ref:"User"}],
         comments:[
             {

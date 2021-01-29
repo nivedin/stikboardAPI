@@ -43,6 +43,10 @@ const userSchema = new mongoose.Schema({
     },
     following:[{type:ObjectId,unique:true,ref:"User"}],
     followers:[{type:ObjectId,unique:true,ref:"User"}],
+    rating:{
+        type:Number,
+        default:0
+    },
     photo:{
         data:Buffer,
         contentType:String

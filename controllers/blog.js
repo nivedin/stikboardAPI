@@ -180,7 +180,9 @@ exports.read = (req,res) => {
     .populate('likes','_id name username')
     .populate('comments','text createdOn')
     .populate('comments.postedBy','_id name username')
-    .select('_id title body slug mtitle mdesc categories tags postedBy createdAt updatedAt likes comments')
+    .populate('ratings.ratedBy','_id name username')
+    .populate('ratedBy','_id name username')
+    .select('_id title body slug mtitle mdesc categories tags postedBy createdAt updatedAt likes comments ratings')
     .exec((err,data) => {
         if(err){
             return res.json({
@@ -372,7 +374,7 @@ exports.likeBlog = (req,res) => {
                 error:errorHandler(err)
             })
         }
-        // console.log("response",data);
+        //console.log("response",data);
         res.json(data)
     })
 }
@@ -391,7 +393,7 @@ exports.unlikeBlog = (req,res) => {
 }
 
 exports.commentBlog = (req,res) => {
-    console.log(req.body);
+    //console.log(req.body);
     let comment = req.body.comment
     comment.postedBy = req.body.userId
     const slug = req.body.slug
@@ -404,7 +406,7 @@ exports.commentBlog = (req,res) => {
                 error:errorHandler(err)
             })
         }
-        console.log("response",data);
+        //console.log("response",data);
         res.json(data)
     })
 }
@@ -426,3 +428,81 @@ exports.uncommentBlog = (req,res) => {
         res.json(data)
     })
 }
+
+exports.rateBlog = (req,res) => {
+    //console.log(req.body);
+    let slug = req.body.slug
+    let ratingBlog = req.body.rating
+    ratingBlog.ratedBy = req.body.userId
+    Blog.findOneAndUpdate({slug},{$push:{ratings:ratingBlog}},{new:true})
+    .populate('ratings.ratedBy','_id name username')
+    .populate('ratedBy','_id name username')
+    .select("-photo -body")
+    .exec((err,data) => {
+        if(err){
+            return res.status(400).json({
+                error:errorHandler(err)
+            })
+        }
+        console.log("response",data);
+        res.json(data)
+    })
+    // Blog.find({slug}).exec((err,data) => {
+    //     if(err){
+    //         return res.status(400).json({
+    //             error:errorHandler(err)
+    //         })
+    //     }
+    //   if(data){
+    //      // console.log(data[0].ratings);
+    //       //console.log("user",req.body.userId);
+    //       let ratings = data[0].ratings
+    //       ratings.forEach(rating => {
+    //           if(rating.ratedBy = req.body.userId){
+    //             rating = ratingBlog
+    //             console.log("user found");
+    //             //res.json(data)
+    //             // data.save((err, result) => {
+    //             //     if (err) {
+    //             //         console.log(err)
+    //             //         return res.status(400).json({
+    //             //             error: errorHandler(err)
+    //             //         });
+    //             //     }
+                
+    //             //     res.json(result)
+                   
+    //             // });
+
+    //         }
+    //         else{
+    //             console.log("user not found");
+    //         }
+    //       })
+    //   }else{
+    //     console.log("user not found");
+    //   }
+    // })
+
+}
+
+// exports.ratingBlog = (req,res) => {
+//     //console.log(req.body);
+//     const slug = req.body.slug
+//     Blog.findOneAndUpdate({slug},{$push:{likes:req.body.userId}},function(err,data){
+//         Blog.aggregate([
+//             {$match:{}},
+//             {$group:{slug:"$slug",rating:{$avg:'$likes'}}},
+//             {$project:{rating:1,photo:0}}
+//         ])
+//     })
+//     .exec((err,data) => {
+//         if(err){
+//             return res.status(400).json({
+//                 error:errorHandler(err)
+//             })
+//         }
+//         console.log("response",data);
+//         res.json(data)
+//     })
+// }

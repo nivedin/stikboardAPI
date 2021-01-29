@@ -37,8 +37,8 @@ exports.publicProfile = (req,res) => {
         .populate('tags','_id name slug')
         .populate('postedBy','_id name username')
         .populate('likes','_id name username')
-    .populate('comments','text createdOn')
-    .populate('comments.postedBy','_id name username')
+        .populate('comments','text createdOn')
+        .populate('comments.postedBy','_id name username')
         .limit(10)
         .select('_id title slug excerpt categories tags postedBy createdAt updatedAt likes comments')
         .exec((err,data) => {
@@ -57,40 +57,45 @@ exports.publicProfile = (req,res) => {
     })
 
 };
-// exports.publicProfile = (req,res) => {
+
+
+// exports.publicratingProfile = (req,res) => {
 //     let username = req.params.username
 //     let user
 //     let blogs
+//     let datas
 
-//     User.findOne({username}).exec((err,userFromDB) => {
-//         if(err || !userFromDB){
-//             return res.status(400).json({
-//                 error:'User not found'
+//     User.aggregate([
+//         {
+//             $lookup:{
+//                 from:"blog",
+//                 as:"blog",
+//                 let:{username:username},
+//                 pipeline:[
+//                     {$match:{$expr:{$eq:['username','$$username']}}}
+//                 ]
+//             }
+//         },
+//         {
+//             $project:{
+//                 _id:1,
+//                 name:1,
+//                 username:1,
+//                 rating:1
+//             }
+//         }
+
+//     ]).exec((err,data) => {
+//         if(err) {
+//                 return res.status(400).json({
+//                 error:errorHandler(err)
 //             })
 //         }
-//         user = userFromDB
-//         let userId = user._id
-//         Blog.find({postedBy:userId})
-//         .populate('categories','_id name slug')
-//         .populate('tags','_id name slug')
-//         .populate('postedBy','_id name')
-//         .limit(10)
-//         .select('_id title slug excerpt categories tags postedBy createdAt updatedAt')
-//         .exec((err,data) => {
-//             if(err) {
-//                     return res.status(400).json({
-//                     error:errorHandler(err)
-//                 })
-//             }
-//             user.photo = undefined
-//             user.hashed_password = undefined
-//             res.json({
-//                 user,
-//                 blogs:data
-//             })
+//         console.log("data",data);
+//         res.json({
+//             datas:data
 //         })
 //     })
-
 // };
 
 exports.update = (req, res) => {

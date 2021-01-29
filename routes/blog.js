@@ -1,12 +1,15 @@
 const express = require('express');
 const router = express.Router();
-const { create,list,listAllBlogsCatogoriesTags,read,remove,update,photo,listRelated,listSearch,listByUser,likeBlog,unlikeBlog,commentBlog,uncommentBlog } = require('../controllers/blog');
+const { create,list,listAllBlogsCatogoriesTags,read,remove,update,photo,listRelated,listSearch,listByUser,likeBlog,unlikeBlog,commentBlog,uncommentBlog,ratingBlog,rateBlog } = require('../controllers/blog');
 
 const { requireSignin, adminMiddleware,authMiddleware,canUpdateDeleteBlog } = require('../controllers/auth');
 
 //like-unlike
 router.put('/blog/like',requireSignin,likeBlog);
 router.put('/blog/unlike',requireSignin,unlikeBlog);
+
+//rate
+router.put('/blog/rate',requireSignin,rateBlog);
 
 //comment
 router.put('/blog/comment',requireSignin,commentBlog);
