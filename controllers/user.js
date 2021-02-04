@@ -39,6 +39,8 @@ exports.publicProfile = (req,res) => {
         .populate('likes','_id name username')
         .populate('comments','text createdOn')
         .populate('comments.postedBy','_id name username')
+        .populate('ratings','rate createdOn')
+        .populate('ratings.ratedBy','_id name username')
         .limit(10)
         .select('_id title slug excerpt categories tags postedBy createdAt updatedAt likes comments')
         .exec((err,data) => {
@@ -59,44 +61,41 @@ exports.publicProfile = (req,res) => {
 };
 
 
-// exports.publicratingProfile = (req,res) => {
-//     let username = req.params.username
-//     let user
-//     let blogs
-//     let datas
+exports.publicratingProfile = (req,res) => {
+    let username = req.params.username
+    let user
+    let blogs
 
-//     User.aggregate([
-//         {
-//             $lookup:{
-//                 from:"blog",
-//                 as:"blog",
-//                 let:{username:username},
-//                 pipeline:[
-//                     {$match:{$expr:{$eq:['username','$$username']}}}
-//                 ]
-//             }
-//         },
-//         {
-//             $project:{
-//                 _id:1,
-//                 name:1,
-//                 username:1,
-//                 rating:1
-//             }
-//         }
-
-//     ]).exec((err,data) => {
-//         if(err) {
-//                 return res.status(400).json({
-//                 error:errorHandler(err)
-//             })
-//         }
-//         console.log("data",data);
-//         res.json({
-//             datas:data
-//         })
-//     })
-// };
+    User.findOne({username})
+    .exec((err,userFromDB) => {
+        if(err || !userFromDB){
+            return res.status(400).json({
+                error:'User not found'
+            })
+        }
+        user = userFromDB
+        let userId = user._id
+        Blog.find({postedBy:userId})
+        .populate('ratings','rate createdOn')
+        .populate('ratings.ratedBy','_id name username')
+        .limit(10)
+        .select('ratings')
+        .exec((err,data) => {
+            if(err) {
+                    return res.status(400).json({
+                    error:errorHandler(err)
+                })
+            }
+            user.photo = undefined
+            user.hashed_password = undefined
+            user.salt = undefined
+            res.json({
+                user,
+                blogs:data
+            })
+        })
+    })
+};
 
 exports.update = (req, res) => {
     let form = new formidable.IncomingForm();
